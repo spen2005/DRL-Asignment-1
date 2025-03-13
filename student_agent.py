@@ -151,52 +151,52 @@ def get_action(obs):
     if obs[13]:
         wall[car_pos[0]][car_pos[1] - 1] = 1
 
-    down_gain = 1.0
-    up_gain = 1.0
-    right_gain = 1.0
-    left_gain = 1.0
+    # down_gain = 1.0
+    # up_gain = 1.0
+    # right_gain = 1.0
+    # left_gain = 1.0
 
-    # if passenger is not on
-    if not passenger_on:
-        for i in range(4):
-            if is_passenger[i] == 1:
-                if station_pos[i][0] > car_pos[0]:
-                    down_gain *= 4
-                if station_pos[i][0] < car_pos[0]:
-                    up_gain *= 4
-                if station_pos[i][1] > car_pos[1]:
-                    right_gain *= 4
-                if station_pos[i][1] < car_pos[1]:
-                    left_gain *= 4
-            if is_passenger[i] == 0:
-                if station_pos[i][0] > car_pos[0]:
-                    down_gain *= 2
-                if station_pos[i][0] < car_pos[0]:
-                    up_gain *= 2
-                if station_pos[i][1] > car_pos[1]:
-                    right_gain *= 2
-                if station_pos[i][1] < car_pos[1]:
-                    left_gain *= 2
-    else:
-        for i in range(4):
-            if is_destination[i] == 1:
-                if station_pos[i][0] > car_pos[0]:
-                    down_gain *= 1.5
-                if station_pos[i][0] < car_pos[0]:
-                    up_gain *= 1.5
-                if station_pos[i][1] > car_pos[1]:
-                    right_gain *= 1.5
-                if station_pos[i][1] < car_pos[1]:
-                    left_gain *= 1.5
-            if is_destination[i] == 0:
-                if station_pos[i][0] > car_pos[0]:
-                    down_gain *= 1.2
-                if station_pos[i][0] < car_pos[0]:
-                    up_gain *= 1.2
-                if station_pos[i][1] > car_pos[1]:
-                    right_gain *= 1.2
-                if station_pos[i][1] < car_pos[1]:
-                    left_gain *= 1.2 
+    # # if passenger is not on
+    # if not passenger_on:
+    #     for i in range(4):
+    #         if is_passenger[i] == 1:
+    #             if station_pos[i][0] > car_pos[0]:
+    #                 down_gain *= 4
+    #             if station_pos[i][0] < car_pos[0]:
+    #                 up_gain *= 4
+    #             if station_pos[i][1] > car_pos[1]:
+    #                 right_gain *= 4
+    #             if station_pos[i][1] < car_pos[1]:
+    #                 left_gain *= 4
+    #         if is_passenger[i] == 0:
+    #             if station_pos[i][0] > car_pos[0]:
+    #                 down_gain *= 2
+    #             if station_pos[i][0] < car_pos[0]:
+    #                 up_gain *= 2
+    #             if station_pos[i][1] > car_pos[1]:
+    #                 right_gain *= 2
+    #             if station_pos[i][1] < car_pos[1]:
+    #                 left_gain *= 2
+    # else:
+    #     for i in range(4):
+    #         if is_destination[i] == 1:
+    #             if station_pos[i][0] > car_pos[0]:
+    #                 down_gain *= 1.5
+    #             if station_pos[i][0] < car_pos[0]:
+    #                 up_gain *= 1.5
+    #             if station_pos[i][1] > car_pos[1]:
+    #                 right_gain *= 1.5
+    #             if station_pos[i][1] < car_pos[1]:
+    #                 left_gain *= 1.5
+    #         if is_destination[i] == 0:
+    #             if station_pos[i][0] > car_pos[0]:
+    #                 down_gain *= 1.2
+    #             if station_pos[i][0] < car_pos[0]:
+    #                 up_gain *= 1.2
+    #             if station_pos[i][1] > car_pos[1]:
+    #                 right_gain *= 1.2
+    #             if station_pos[i][1] < car_pos[1]:
+    #                 left_gain *= 1.2 
             
 
 
@@ -231,10 +231,10 @@ def get_action(obs):
         logits = np.array([logits0, logits1, logits2, logits3])
         # print(logits)
         prob = np.exp(logits - np.max(logits))
-        prob[0] *= down_gain
-        prob[1] *= up_gain
-        prob[2] *= right_gain
-        prob[3] *= left_gain
+        # prob[0] *= down_gain
+        # prob[1] *= up_gain
+        # prob[2] *= right_gain
+        # prob[3] *= left_gain
         prob = prob / np.sum(prob)
         # print(prob)
         action = np.random.choice([0, 1, 2, 3], p=prob)
