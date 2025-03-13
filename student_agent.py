@@ -4,7 +4,7 @@ import pickle
 import random
 import gym
 
-MAX_SIZE = 5
+MAX_SIZE = 100
 visit_count = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
 wall = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
 passenger_pos = None
