@@ -127,19 +127,19 @@ def get_action(obs):
     else:
         # random sample based on visit count and wall state
         if wall[car_pos[0] + 1][car_pos[1]] == 1 or car_pos[0] + 1 > x_max:
-            logits0 = -np.inf
+            logits0 = -10000
         else:
             logits0 = -visit_count[car_pos[0] + 1][car_pos[1]]
         if wall[car_pos[0] - 1][car_pos[1]] == 1 or car_pos[0] - 1 < x_min:
-            logits1 = -np.inf
+            logits1 = -10000
         else:
             logits1 = -visit_count[car_pos[0] - 1][car_pos[1]]
         if wall[car_pos[0]][car_pos[1] + 1] == 1 or car_pos[1] + 1 > y_max:
-            logits2 = -np.inf
+            logits2 = -10000
         else:
             logits2 = -visit_count[car_pos[0]][car_pos[1] + 1]
         if wall[car_pos[0]][car_pos[1] - 1] == 1 or car_pos[1] - 1 < y_min:
-            logits3 = -np.inf
+            logits3 = -10000
         else:
             logits3 = -visit_count[car_pos[0]][car_pos[1] - 1]
 
