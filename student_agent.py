@@ -20,7 +20,11 @@ prev_obs = None
 first = True
 
 def nearby(pos1, pos2):
-    if abs(pos1[0] - pos2[0]) <= 1 and abs(pos1[1] - pos2[1]) <= 1:
+    if abs(pos1[0] - pos2[0]) == 0 and abs(pos1[1] - pos2[1]) == 0:
+        return True
+    if abs(pos1[0] - pos2[0]) == 1 and abs(pos1[1] - pos2[1]) == 0: 
+        return True
+    if abs(pos1[0] - pos2[0]) == 0 and abs(pos1[1] - pos2[1]) == 1:
         return True
     return False
 
