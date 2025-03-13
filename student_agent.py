@@ -8,8 +8,12 @@ MAX_SIZE = 10
 visit_count = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
 wall = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
 passenger_pos = None
+first_near_passenger_pos = None
+
 passenger_on = False
+
 destination_pos = None
+first_near_destination_pos = None
 
 is_passenger = [0, 0, 0, 0]
 is_destination = [0, 0, 0, 0]
@@ -21,12 +25,12 @@ first = True
 
 def nearby(pos1, pos2):
     if abs(pos1[0] - pos2[0]) == 0 and abs(pos1[1] - pos2[1]) == 0:
-        return True
+        return 1
     if abs(pos1[0] - pos2[0]) == 1 and abs(pos1[1] - pos2[1]) == 0: 
-        return True
+        return 1
     if abs(pos1[0] - pos2[0]) == 0 and abs(pos1[1] - pos2[1]) == 1:
-        return True
-    return False
+        return 1
+    return 0
 
 def get_action(obs):
     global passenger_pos
@@ -60,57 +64,70 @@ def get_action(obs):
 
     if passenger_pos is None:
         passenger_nearby = obs[14]
-        if nearby(station0_pos, car_pos):
-            if passenger_nearby:
-                passenger_pos = station0_pos
-                is_passenger[0] = 1
-            else:
+        a = nearby(station0_pos, car_pos)
+        b = nearby(station1_pos, car_pos)
+        c = nearby(station2_pos, car_pos)
+        d = nearby(station3_pos, car_pos)
+
+        if passenger_nearby:
+            if a == 0:
                 is_passenger[0] = -1
-        elif nearby(station1_pos, car_pos):
-            if passenger_nearby:
-                passenger_pos = station1_pos
-                is_passenger[1] = 1
-            else:
+            if b == 0:
                 is_passenger[1] = -1
-        elif nearby(station2_pos, car_pos):
-            if passenger_nearby:
-                passenger_pos = station2_pos
-                is_passenger[2] = 1
-            else:
+            if c == 0:
                 is_passenger[2] = -1
-        elif nearby(station3_pos, car_pos):
-            if passenger_nearby:
-                passenger_pos = station3_pos
-                is_passenger[3] = 1
-            else:
+            if d == 0:
                 is_passenger[3] = -1
+            if a == 1 and is_passenger[0] != -1:
+                is_passenger[0] = 1
+            if b == 1 and is_passenger[1] != -1:
+                is_passenger[1] = 1
+            if c == 1 and is_passenger[2] != -1:
+                is_passenger[2] = 1
+            if d == 1 and is_passenger[3] != -1:
+                is_passenger[3] = 1
+
+        ones = np.where(np.array(is_passenger) == 1)[0]
+        zeros = np.where(np.array(is_passenger) == 0)[0]
+        minus_ones = np.where(np.array(is_passenger) == -1)[0]
+
+        if len(ones) == 1:
+            passenger_pos = [station0_pos, station1_pos, station2_pos, station3_pos][ones[0]]
+        elif len(minus_ones) == 3:
+            passenger_pos = [station0_pos, station1_pos, station2_pos, station3_pos][zeros[0]]
 
     if destination_pos is None:
         destination_nearby = obs[15]
-        if nearby(station0_pos, car_pos):
-            if destination_nearby:
-                destination_pos = station0_pos
-                is_destination[0] = 1
-            else:
+        a = nearby(station0_pos, car_pos)
+        b = nearby(station1_pos, car_pos)
+        c = nearby(station2_pos, car_pos)
+        d = nearby(station3_pos, car_pos)
+
+        if destination_nearby:
+            if a == 0:
                 is_destination[0] = -1
-        elif nearby(station1_pos, car_pos):
-            if destination_nearby:
-                destination_pos = station1_pos
-                is_destination[1] = 1
-            else:
+            if b == 0:
                 is_destination[1] = -1
-        elif nearby(station2_pos, car_pos):
-            if destination_nearby:
-                destination_pos = station2_pos
-                is_destination[2] = 1
-            else:
+            if c == 0:
                 is_destination[2] = -1
-        elif nearby(station3_pos, car_pos):
-            if destination_nearby:
-                destination_pos = station3_pos
-                is_destination[3] = 1
-            else:
+            if d == 0:
                 is_destination[3] = -1
+            if a == 1 and is_destination[0] != -1:
+                is_destination[0] = 1
+            if b == 1 and is_destination[1] != -1:
+                is_destination[1] = 1
+            if c == 1 and is_destination[2] != -1:
+                is_destination[2] = 1
+            if d == 1 and is_destination[3] != -1:
+                is_destination[3] = 1
+
+        ones = np.where(np.array(is_destination) == 1)[0]
+        zeros = np.where(np.array(is_destination) == 0)[0]
+        minus_ones = np.where(np.array(is_destination) == -1)[0]
+        if len(ones) == 1:
+            destination_pos = [station0_pos, station1_pos, station2_pos, station3_pos][ones[0]]
+        elif len(minus_ones) == 3:
+            destination_pos = [station0_pos, station1_pos, station2_pos, station3_pos][zeros[0]]
 
     if obs[10]:
         wall[car_pos[0] - 1][car_pos[1]] = 1
