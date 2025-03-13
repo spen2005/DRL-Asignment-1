@@ -32,7 +32,7 @@ def get_action(obs):
     # NOTE: Keep in mind that your Q-table may not cover all possible states in the testing environment.
     #       To prevent crashes, implement a fallback strategy for missing keys. 
     #       Otherwise, even if your agent performs well in training, it may fail during testing.
-    print(f"observation: {obs}")
+    # print(f"observation: {obs}")
     visit_count[obs[0] + 1][obs[1] + 1] += 1
     car_pos = (obs[0] + 1, obs[1] + 1)
     station0_pos = (obs[2] + 1, obs[3] + 1)
@@ -45,7 +45,8 @@ def get_action(obs):
     y_min = np.min([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
     y_max = np.max([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
     
-    print("getting passenger_pos")
+    
+    print(x_min, x_max, y_min, y_max)
 
     if passenger_pos is None:
         passenger_nearby = obs[14]
@@ -140,25 +141,25 @@ def get_action(obs):
 
         # sample action based on softmax prob
         logits = np.array([logits0, logits1, logits2, logits3])
-        print(logits)
+        # print(logits)
         prob = np.exp(logits - np.max(logits))
         prob = prob / np.sum(prob)
-        print(prob)
+        # print(prob)
         action = np.random.choice([0, 1, 2, 3], p=prob)
     
-    print(action)
+    # print(action)
 
     # if pickup
     if action == 4 and car_pos == passenger_pos:
         passenger_on = True
 
-    print(f"visit_count: {visit_count}")
-    print(f"wall: {wall}")
-    print(f"passenger_pos: {passenger_pos}")
-    print(f"destination_pos: {destination_pos}")
-    print(f"passenger_on: {passenger_on}")
-    print(f"is_passenger: {is_passenger}")
-    print(f"is_destination: {is_destination}")
+    # print(f"visit_count: {visit_count}")
+    # print(f"wall: {wall}")
+    # print(f"passenger_pos: {passenger_pos}")
+    # print(f"destination_pos: {destination_pos}")
+    # print(f"passenger_on: {passenger_on}")
+    # print(f"is_passenger: {is_passenger}")
+    # print(f"is_destination: {is_destination}")
 
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
