@@ -4,7 +4,7 @@ import pickle
 import random
 import gym
 
-MAX_SIZE = 100
+MAX_SIZE = 10
 visit_count = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
 wall = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
 passenger_pos = None
@@ -44,10 +44,10 @@ def get_action(obs):
     station2_pos = (obs[6] + 1, obs[7] + 1)
     station3_pos = (obs[8] + 1, obs[9] + 1)
 
-    x_min = np.min([station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0]])
-    x_max = np.max([station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0]])
-    y_min = np.min([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
-    y_max = np.max([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
+    x_min = np.min([station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0], car_pos[0]])    
+    x_max = np.max([station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0], car_pos[0]])
+    y_min = np.min([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1], car_pos[1]])
+    y_max = np.max([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1], car_pos[1]])
     
     
     # print(x_min, x_max, y_min, y_max)
@@ -157,13 +157,13 @@ def get_action(obs):
     if action == 4 and car_pos == passenger_pos:
         passenger_on = True
 
-    # print(f"visit_count: {visit_count}")
-    # print(f"wall: {wall}")
-    # print(f"passenger_pos: {passenger_pos}")
-    # print(f"destination_pos: {destination_pos}")
-    # print(f"passenger_on: {passenger_on}")
-    # print(f"is_passenger: {is_passenger}")
-    # print(f"is_destination: {is_destination}")
+    print(f"visit_count: {visit_count}")
+    print(f"wall: {wall}")
+    print(f"passenger_pos: {passenger_pos}")
+    print(f"destination_pos: {destination_pos}")
+    print(f"passenger_on: {passenger_on}")
+    print(f"is_passenger: {is_passenger}")
+    print(f"is_destination: {is_destination}")
 
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
