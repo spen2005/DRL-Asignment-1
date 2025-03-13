@@ -157,13 +157,13 @@ def get_action(obs):
     if action == 4 and car_pos == passenger_pos:
         passenger_on = True
 
-    print(f"visit_count: {visit_count}")
-    print(f"wall: {wall}")
-    print(f"passenger_pos: {passenger_pos}")
-    print(f"destination_pos: {destination_pos}")
-    print(f"passenger_on: {passenger_on}")
-    print(f"is_passenger: {is_passenger}")
-    print(f"is_destination: {is_destination}")
+    # print(f"visit_count: {visit_count}")
+    # print(f"wall: {wall}")
+    # print(f"passenger_pos: {passenger_pos}")
+    # print(f"destination_pos: {destination_pos}")
+    # print(f"passenger_on: {passenger_on}")
+    # print(f"is_passenger: {is_passenger}")
+    # print(f"is_destination: {is_destination}")
 
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
