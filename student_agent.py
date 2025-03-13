@@ -40,11 +40,13 @@ def get_action(obs):
     station2_pos = (obs[6] + 1, obs[7] + 1)
     station3_pos = (obs[8] + 1, obs[9] + 1)
 
-    x_min = np.min([car_pos[0], station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0]])
-    x_max = np.max([car_pos[0], station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0]])
-    y_min = np.min([car_pos[1], station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
-    y_max = np.max([car_pos[1], station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
+    x_min = np.min([station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0]])
+    x_max = np.max([station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0]])
+    y_min = np.min([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
+    y_max = np.max([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
     
+    print("getting passenger_pos")
+
     if passenger_pos is None:
         passenger_nearby = obs[14]
         if nearby(station0_pos, car_pos):
@@ -104,9 +106,11 @@ def get_action(obs):
     if obs[11]:
         wall[car_pos[0] + 1][car_pos[1]] = 1
     if obs[12]:
-        wall[obs[0]][car_pos[1] + 1] = 1
+        wall[car_pos[0]][car_pos[1] + 1] = 1
     if obs[13]:
         wall[car_pos[0]][car_pos[1] - 1] = 1
+
+
 
     # action = random.choice([0, 1, 2, 3, 4, 5])
     # Pickup if passenger is not on.
