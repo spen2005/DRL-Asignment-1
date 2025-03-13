@@ -49,25 +49,26 @@ def get_action(obs):
     # print(f"observation: {obs}")
     visit_count[obs[0] + 1][obs[1] + 1] += 1
     car_pos = (obs[0] + 1, obs[1] + 1)
-    station0_pos = (obs[2] + 1, obs[3] + 1)
-    station1_pos = (obs[4] + 1, obs[5] + 1)
-    station2_pos = (obs[6] + 1, obs[7] + 1)
-    station3_pos = (obs[8] + 1, obs[9] + 1)
+    station_pos = [(obs[2] + 1, obs[3] + 1), (obs[4] + 1, obs[5] + 1), (obs[6] + 1, obs[7] + 1), (obs[8] + 1, obs[9] + 1)]
+    # station0_pos = (obs[2] + 1, obs[3] + 1)
+    # station1_pos = (obs[4] + 1, obs[5] + 1)
+    # station2_pos = (obs[6] + 1, obs[7] + 1)
+    # station3_pos = (obs[8] + 1, obs[9] + 1)
 
-    x_min = np.min([station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0], car_pos[0]])    
-    x_max = np.max([station0_pos[0], station1_pos[0], station2_pos[0], station3_pos[0], car_pos[0]])
-    y_min = np.min([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1], car_pos[1]])
-    y_max = np.max([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1], car_pos[1]])
+    x_min = np.min([station_pos[0][0], station_pos[1][0], station_pos[2][0], station_pos[3][0], car_pos[0]])    
+    x_max = np.max([station_pos[0][0], station_pos[1][0], station_pos[2][0], station_pos[3][0], car_pos[0]])
+    y_min = np.min([station_pos[0][1], station_pos[1][1], station_pos[2][1], station_pos[3][1], car_pos[1]])
+    y_max = np.max([station_pos[0][1], station_pos[1][1], station_pos[2][1], station_pos[3][1], car_pos[1]])
     
     
     # print(x_min, x_max, y_min, y_max)
 
     if passenger_pos is None:
         passenger_nearby = obs[14]
-        a = nearby(station0_pos, car_pos)
-        b = nearby(station1_pos, car_pos)
-        c = nearby(station2_pos, car_pos)
-        d = nearby(station3_pos, car_pos)
+        a = nearby(station_pos[0], car_pos)
+        b = nearby(station_pos[1], car_pos)
+        c = nearby(station_pos[2], car_pos)
+        d = nearby(station_pos[3], car_pos)
 
         if passenger_nearby:
             if a == 0:
@@ -92,16 +93,22 @@ def get_action(obs):
         minus_ones = np.where(np.array(is_passenger) == -1)[0]
 
         if len(ones) == 1:
-            passenger_pos = [station0_pos, station1_pos, station2_pos, station3_pos][ones[0]]
+            passenger_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][ones[0]]
+            for i in range(4):
+                if i!=ones[0]:
+                    is_passenger[i] = -1
         elif len(minus_ones) == 3:
-            passenger_pos = [station0_pos, station1_pos, station2_pos, station3_pos][zeros[0]]
+            passenger_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
+            for i in range(4):
+                if i!=zeros[0]:
+                    is_passenger[i] = -1
 
     if destination_pos is None:
         destination_nearby = obs[15]
-        a = nearby(station0_pos, car_pos)
-        b = nearby(station1_pos, car_pos)
-        c = nearby(station2_pos, car_pos)
-        d = nearby(station3_pos, car_pos)
+        a = nearby(station_pos[0], car_pos)
+        b = nearby(station_pos[1], car_pos)
+        c = nearby(station_pos[2], car_pos)
+        d = nearby(station_pos[3], car_pos)
 
         if destination_nearby:
             if a == 0:
@@ -125,9 +132,15 @@ def get_action(obs):
         zeros = np.where(np.array(is_destination) == 0)[0]
         minus_ones = np.where(np.array(is_destination) == -1)[0]
         if len(ones) == 1:
-            destination_pos = [station0_pos, station1_pos, station2_pos, station3_pos][ones[0]]
+            destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][ones[0]]
+            for i in range(4):
+                if i!=ones[0]:
+                    is_destination[i] = -1
         elif len(minus_ones) == 3:
-            destination_pos = [station0_pos, station1_pos, station2_pos, station3_pos][zeros[0]]
+            destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
+            for i in range(4):
+                if i!=zeros[0]:
+                    is_destination[i] = -1 
 
     if obs[10]:
         wall[car_pos[0] - 1][car_pos[1]] = 1
@@ -137,6 +150,54 @@ def get_action(obs):
         wall[car_pos[0]][car_pos[1] + 1] = 1
     if obs[13]:
         wall[car_pos[0]][car_pos[1] - 1] = 1
+
+    down_gain = 1.0
+    up_gain = 1.0
+    right_gain = 1.0
+    left_gain = 1.0
+
+    # if passenger is not on
+    if not passenger_on:
+        for i in range(4):
+            if is_passenger[i] == 1:
+                if station_pos[i][0] > car_pos[0]:
+                    down_gain *= 4
+                if station_pos[i][0] < car_pos[0]:
+                    up_gain *= 4
+                if station_pos[i][1] > car_pos[1]:
+                    right_gain *= 4
+                if station_pos[i][1] < car_pos[1]:
+                    left_gain *= 4
+            if is_passenger[i] == 0:
+                if station_pos[i][0] > car_pos[0]:
+                    down_gain *= 2
+                if station_pos[i][0] < car_pos[0]:
+                    up_gain *= 2
+                if station_pos[i][1] > car_pos[1]:
+                    right_gain *= 2
+                if station_pos[i][1] < car_pos[1]:
+                    left_gain *= 2
+    else:
+        for i in range(4):
+            if is_destination[i] == 1:
+                if station_pos[i][0] > car_pos[0]:
+                    down_gain *= 1.5
+                if station_pos[i][0] < car_pos[0]:
+                    up_gain *= 1.5
+                if station_pos[i][1] > car_pos[1]:
+                    right_gain *= 1.5
+                if station_pos[i][1] < car_pos[1]:
+                    left_gain *= 1.5
+            if is_destination[i] == 0:
+                if station_pos[i][0] > car_pos[0]:
+                    down_gain *= 1.2
+                if station_pos[i][0] < car_pos[0]:
+                    up_gain *= 1.2
+                if station_pos[i][1] > car_pos[1]:
+                    right_gain *= 1.2
+                if station_pos[i][1] < car_pos[1]:
+                    left_gain *= 1.2 
+            
 
 
 
@@ -170,6 +231,10 @@ def get_action(obs):
         logits = np.array([logits0, logits1, logits2, logits3])
         # print(logits)
         prob = np.exp(logits - np.max(logits))
+        prob[0] *= down_gain
+        prob[1] *= up_gain
+        prob[2] *= right_gain
+        prob[3] *= left_gain
         prob = prob / np.sum(prob)
         # print(prob)
         action = np.random.choice([0, 1, 2, 3], p=prob)
@@ -180,7 +245,7 @@ def get_action(obs):
     if action == 4 and car_pos == passenger_pos:
         passenger_on = True
     if first:
-        print(station0_pos, station1_pos, station2_pos, station3_pos, car_pos)
+        print(station_pos[0], station_pos[1], station_pos[2], station_pos[3], car_pos)
         print(f"visit_count: {visit_count}")
         print(f"wall: {wall}")
         print(f"passenger_pos: {passenger_pos}")
