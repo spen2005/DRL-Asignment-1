@@ -96,6 +96,29 @@ def get_action(obs):
             passenger_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][ones[0]]
         elif len(minus_ones) == 3:
             passenger_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
+    down_gain = 1.0
+    up_gain = 1.0
+    right_gain = 1.0
+    left_gain = 1.0
+    if not passenger_on and passenger_pos is not None:
+        if passenger_pos[0] > car_pos[0]:
+            down_gain *= 100
+        elif passenger_pos[0] < car_pos[0]:
+            up_gain *= 100
+        if passenger_pos[1] > car_pos[1]:
+            right_gain *= 100
+        elif passenger_pos[1] < car_pos[1]:
+            left_gain *= 100
+
+    if passenger_on and destination_pos is not None:
+        if destination_pos[0] > car_pos[0]:
+            down_gain *= 100
+        elif destination_pos[0] < car_pos[0]:
+            up_gain *= 100
+        if destination_pos[1] > car_pos[1]:
+            right_gain *= 100
+        elif destination_pos[1] < car_pos[1]:
+            left_gain *= 100
 
     if destination_pos is None:
         destination_nearby = obs[15]
@@ -169,8 +192,12 @@ def get_action(obs):
         logits = np.array([logits0, logits1, logits2, logits3])
         # print(logits)
         prob = np.exp(logits - np.max(logits))
+        prob[0] *= down_gain
+        prob[1] *= up_gain
+        prob[2] *= right_gain
+        prob[3] *= left_gain
         prob = prob / np.sum(prob)
-        # print(prob)
+        print(prob)
         action = np.random.choice([0, 1, 2, 3], p=prob)
     
     # print(action)
@@ -178,16 +205,16 @@ def get_action(obs):
     # if pickup
     if action == 4 and car_pos == passenger_pos:
         passenger_on = True
-    if first:
-        print(station_pos[0], station_pos[1], station_pos[2], station_pos[3], car_pos)
-        print(f"visit_count: {visit_count}")
-        print(f"wall: {wall}")
-        print(f"passenger_pos: {passenger_pos}")
-        print(f"destination_pos: {destination_pos}")
-        print(f"passenger_on: {passenger_on}")
-        print(f"is_passenger: {is_passenger}")
-        print(f"is_destination: {is_destination}")
-        first = False
+
+    print(station_pos[0], station_pos[1], station_pos[2], station_pos[3], car_pos)
+    print(f"visit_count: {visit_count}")
+    print(f"wall: {wall}")
+    print(f"passenger_pos: {passenger_pos}")
+    print(f"destination_pos: {destination_pos}")
+    print(f"passenger_on: {passenger_on}")
+    print(f"is_passenger: {is_passenger}")
+    print(f"is_destination: {is_destination}")
+    first = False
 
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
