@@ -159,6 +159,7 @@ def get_action(obs):
     if action == 4 and car_pos == passenger_pos:
         passenger_on = True
     if first:
+        print(station0_pos, station1_pos, station2_pos, station3_pos, car_pos)
         print(f"visit_count: {visit_count}")
         print(f"wall: {wall}")
         print(f"passenger_pos: {passenger_pos}")
