@@ -16,6 +16,8 @@ is_destination = [0, 0, 0, 0]
 
 x_min, x_max, y_min, y_max = 0, 0, 0, 0
 
+prev_obs = None
+
 def nearby(pos1, pos2):
     if abs(pos1[0] - pos2[0]) <= 1 and abs(pos1[1] - pos2[1]) <= 1:
         return True
@@ -26,6 +28,8 @@ def get_action(obs):
     global passenger_on
     global destination_pos
     global x_min, x_max, y_min, y_max
+
+    # Make sure env is not changed
     
     # TODO: Train your own agent
     # HINT: If you're using a Q-table, consider designing a custom key based on `obs` to store useful information.
@@ -46,7 +50,7 @@ def get_action(obs):
     y_max = np.max([station0_pos[1], station1_pos[1], station2_pos[1], station3_pos[1]])
     
     
-    print(x_min, x_max, y_min, y_max)
+    # print(x_min, x_max, y_min, y_max)
 
     if passenger_pos is None:
         passenger_nearby = obs[14]
