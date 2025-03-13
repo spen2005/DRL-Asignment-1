@@ -17,6 +17,7 @@ is_destination = [0, 0, 0, 0]
 x_min, x_max, y_min, y_max = 0, 0, 0, 0
 
 prev_obs = None
+first = True
 
 def nearby(pos1, pos2):
     if abs(pos1[0] - pos2[0]) <= 1 and abs(pos1[1] - pos2[1]) <= 1:
@@ -28,6 +29,7 @@ def get_action(obs):
     global passenger_on
     global destination_pos
     global x_min, x_max, y_min, y_max
+    global first
 
     # Make sure env is not changed
     
@@ -156,14 +158,15 @@ def get_action(obs):
     # if pickup
     if action == 4 and car_pos == passenger_pos:
         passenger_on = True
-
-    # print(f"visit_count: {visit_count}")
-    # print(f"wall: {wall}")
-    # print(f"passenger_pos: {passenger_pos}")
-    # print(f"destination_pos: {destination_pos}")
-    # print(f"passenger_on: {passenger_on}")
-    # print(f"is_passenger: {is_passenger}")
-    # print(f"is_destination: {is_destination}")
+    if first:
+        print(f"visit_count: {visit_count}")
+        print(f"wall: {wall}")
+        print(f"passenger_pos: {passenger_pos}")
+        print(f"destination_pos: {destination_pos}")
+        print(f"passenger_on: {passenger_on}")
+        print(f"is_passenger: {is_passenger}")
+        print(f"is_destination: {is_destination}")
+        first = False
 
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
