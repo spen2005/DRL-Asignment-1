@@ -5,7 +5,7 @@ import random
 import gym
 
 class Agent():
-    def __init__(self, alpha=0.1, gamma=0.99, epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.999, path = None):
+    def __init__(self, alpha=0.1, gamma=0.99, epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.99995, path = None):
         if path == None:
             self.q_table = {}
         else:
@@ -47,7 +47,7 @@ class Agent():
             return 1
         return 0
 
-    def get_action(self, obs, debug = False, deterministic = False):
+    def get_action(self, obs, debug = False, deterministic = False, eval = False):
         # Make sure env is not changed
         
         # TODO: Train your own agent
@@ -68,54 +68,99 @@ class Agent():
         if state not in self.q_table:
             self.q_table[state] = np.zeros(6)
         
-        if np.random.rand() < self.epsilon and not deterministic:
+        if np.random.rand() < self.epsilon and not deterministic and not eval:
             action = np.random.choice([0, 1, 2, 3, 4, 5])
         else:
-            prob = self.q_table[state]
-            if state[3]:
-                prob[0] = -100000
-            if state[2]:
-                prob[1] = -100000
-            if state[4]:
-                prob[2] = -100000
-            if state[5]:
-                prob[3] = -100000
+            prob = self.q_table[state].copy()
+
+            if debug:
+                print(f"state: {state[2:6]}")
 
             # softmax to get the probability
             max_prob = np.max(prob)
             prob -= max_prob
             prob = np.exp(prob)
             prob /= np.sum(prob)
+
+            act = None
+            if np.random.rand() < prob[0] + prob[1] + prob[2] + prob[3]:
+                act = "move"
+            else:
+                act = "pick_drop"
             
             down_count = self.visit_count[self.car_pos[0] + 1][self.car_pos[1]]
             up_count = self.visit_count[self.car_pos[0] - 1][self.car_pos[1]]
             right_count = self.visit_count[self.car_pos[0]][self.car_pos[1] + 1]
             left_count = self.visit_count[self.car_pos[0]][self.car_pos[1] - 1]
-            prob[0] /= (down_count + 5 + 1e-5)
-            prob[1] /= (up_count + 5 + 1e-5)
-            prob[2] /= (right_count + 5 + 1e-5)
-            prob[3] /= (left_count + 5 + 1e-5)
-            prob /= np.sum(prob)
+
             # randomly choose the action with the probability
             if deterministic:
                 action = np.argmax(prob)
             else:
-                action = np.random.choice([0, 1, 2, 3, 4, 5], p=prob)
-        if debug:
-            print(action)
-            print(f"visit_count: {self.visit_count}")
-            print(f"wall: {self.wall}")
-            print(f"passenger_pos: {self.passenger_pos}")
-            print(f"destination_pos: {self.destination_pos}")
-            print(f"passenger_on: {self.passenger_on}")
-            print(f"is_passenger: {self.is_passenger}")
-            print(f"is_destination: {self.is_destination}")
-            print(f"goal_pos: {goal_pos}")
-            print(f"self.car_pos: {self.car_pos}")
-            print(f"state: {state}")
-            print(f"q_table: {self.q_table[state]}")
-            print(f"prob: {prob}")
+                if act == "move":
+                    new_prob = self.q_table[state][:4].copy()
+                    # new_prob[0] -= 100 * down_count
+                    # new_prob[1] -= 100 * up_count
+                    # new_prob[2] -= 100 * right_count
+                    # new_prob[3] -= 100 * left_count
 
+                    if state[2]:
+                        new_prob[0] = -1000000
+                    if state[3]:
+                        new_prob[1] = -1000000
+                    if state[4]:
+                        new_prob[2] = -1000000
+                    if state[5]:
+                        new_prob[3] = -1000000
+
+                    if debug:
+                        print(f"new prob: {new_prob}")
+
+                    max_new_prob = np.max(new_prob)
+                    new_prob -= max_new_prob
+                    new_prob = np.exp(new_prob)
+
+                    new_prob[0] /= 2**down_count
+                    new_prob[1] /= 2**up_count
+                    new_prob[2] /= 2**right_count
+                    new_prob[3] /= 2**left_count
+
+                    new_prob /= np.sum(new_prob)
+                    action = np.random.choice([0, 1, 2, 3], p=new_prob)
+
+                    if debug:
+                        print(f"new prob: {new_prob}")
+                else:
+                    # if prob[4] > prob[5]:
+                    #     action = 4
+                    # else:
+                    #     action = 5
+                    if np.random.rand() < (prob[4] / (prob[4] + prob[5])):
+                        action = 4
+                    else:
+                        action = 5
+
+        if debug:
+            # print(action)
+            # print(f"visit_count: {self.visit_count}")
+            # print(f"wall: {self.wall}")
+            # print(f"passenger_pos: {self.passenger_pos}")
+            # print(f"destination_pos: {self.destination_pos}")
+            print(f"passenger_on: {self.passenger_on}")
+            # print(f"is_passenger: {self.is_passenger}")
+            # print(f"is_destination: {self.is_destination}")
+            print(f"goal_pos: {goal_pos}")
+            # print(f"self.car_pos: {self.car_pos}")
+            # print(f"state: {state}")
+            # print(f"action: {action}")
+            print(f"q_table: {self.q_table[state]}")
+            # print(f"prob: {prob}")
+            # print(f"down_count: {down_count}")
+            # print(f"up_count: {up_count}")
+            # print(f"right_count: {right_count}")
+            # print(f"left_count: {left_count}")
+            # print(f"station_pos: {[(obs[2] + 1, obs[3] + 1), (obs[4] + 1, obs[5] + 1), (obs[6] + 1, obs[7] + 1), (obs[8] + 1, obs[9] + 1)]}")
+            # print(f"observation: {obs}")
 
         # if pickup
         if action == 4 and self.car_pos == self.passenger_pos:
@@ -285,7 +330,7 @@ class Agent():
         else:
             dir = 0
 
-        state = (dir, self.passenger_on, self.wall[car_pos[0] - 1][car_pos[1]], self.wall[car_pos[0] + 1][car_pos[1]], self.wall[car_pos[0]][car_pos[1] + 1], self.wall[car_pos[0]][car_pos[1] - 1])
+        state = (dir, self.passenger_on, self.wall[car_pos[0] + 1][car_pos[1]], self.wall[car_pos[0] - 1][car_pos[1]], self.wall[car_pos[0]][car_pos[1] + 1], self.wall[car_pos[0]][car_pos[1] - 1])
         return state, goal_pos
     
     def update_epsilon(self):
@@ -304,7 +349,7 @@ class Agent():
 agent = Agent(path = 'taxi_agent.pkl')
 
 def get_action(obs, debug=False):
-    action = agent.get_action(obs, debug = True, deterministic=True)
+    action = agent.get_action(obs, debug = False, deterministic=False, eval=True)
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
 
