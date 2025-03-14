@@ -119,7 +119,7 @@ class Agent():
                     max_new_prob = np.max(new_prob)
                     new_prob -= max_new_prob
                     new_prob = np.exp(new_prob)
-
+ 
                     new_prob[0] /= 2**down_count
                     new_prob[1] /= 2**up_count
                     new_prob[2] /= 2**right_count
