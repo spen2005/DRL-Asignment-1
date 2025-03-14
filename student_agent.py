@@ -4,218 +4,307 @@ import pickle
 import random
 import gym
 
-MAX_SIZE = 10
-visit_count = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
-wall = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
-passenger_pos = None
-first_near_passenger_pos = None
-
-passenger_on = False
-
-destination_pos = None
-first_near_destination_pos = None
-
-is_passenger = [0, 0, 0, 0]
-is_destination = [0, 0, 0, 0]
-
-x_min, x_max, y_min, y_max = 0, 0, 0, 0
-
-prev_obs = None
-first = True
-
-def nearby(pos1, pos2):
-    if abs(pos1[0] - pos2[0]) == 0 and abs(pos1[1] - pos2[1]) == 0:
-        return 1
-    if abs(pos1[0] - pos2[0]) == 1 and abs(pos1[1] - pos2[1]) == 0: 
-        return 1
-    if abs(pos1[0] - pos2[0]) == 0 and abs(pos1[1] - pos2[1]) == 1:
-        return 1
-    return 0
-
-def get_action(obs):
-    global passenger_pos
-    global passenger_on
-    global destination_pos
-    global x_min, x_max, y_min, y_max
-    global first
-
-    # Make sure env is not changed
-    
-    # TODO: Train your own agent
-    # HINT: If you're using a Q-table, consider designing a custom key based on `obs` to store useful information.
-    # NOTE: Keep in mind that your Q-table may not cover all possible states in the testing environment.
-    #       To prevent crashes, implement a fallback strategy for missing keys. 
-    #       Otherwise, even if your agent performs well in training, it may fail during testing.
-    # print(f"observation: {obs}")
-    visit_count[obs[0] + 1][obs[1] + 1] += 1
-    car_pos = (obs[0] + 1, obs[1] + 1)
-    station_pos = [(obs[2] + 1, obs[3] + 1), (obs[4] + 1, obs[5] + 1), (obs[6] + 1, obs[7] + 1), (obs[8] + 1, obs[9] + 1)]
-    # station0_pos = (obs[2] + 1, obs[3] + 1)
-    # station1_pos = (obs[4] + 1, obs[5] + 1)
-    # station2_pos = (obs[6] + 1, obs[7] + 1)
-    # station3_pos = (obs[8] + 1, obs[9] + 1)
-
-    x_min = np.min([station_pos[0][0], station_pos[1][0], station_pos[2][0], station_pos[3][0], car_pos[0]])    
-    x_max = np.max([station_pos[0][0], station_pos[1][0], station_pos[2][0], station_pos[3][0], car_pos[0]])
-    y_min = np.min([station_pos[0][1], station_pos[1][1], station_pos[2][1], station_pos[3][1], car_pos[1]])
-    y_max = np.max([station_pos[0][1], station_pos[1][1], station_pos[2][1], station_pos[3][1], car_pos[1]])
-    
-    
-    # print(x_min, x_max, y_min, y_max)
-
-    if passenger_pos is None:
-        passenger_nearby = obs[14]
-        a = nearby(station_pos[0], car_pos)
-        b = nearby(station_pos[1], car_pos)
-        c = nearby(station_pos[2], car_pos)
-        d = nearby(station_pos[3], car_pos)
-
-        if passenger_nearby:
-            if a == 0:
-                is_passenger[0] = -1
-            if b == 0:
-                is_passenger[1] = -1
-            if c == 0:
-                is_passenger[2] = -1
-            if d == 0:
-                is_passenger[3] = -1
-            if a == 1 and is_passenger[0] != -1:
-                is_passenger[0] = 1
-            if b == 1 and is_passenger[1] != -1:
-                is_passenger[1] = 1
-            if c == 1 and is_passenger[2] != -1:
-                is_passenger[2] = 1
-            if d == 1 and is_passenger[3] != -1:
-                is_passenger[3] = 1
-
-        ones = np.where(np.array(is_passenger) == 1)[0]
-        zeros = np.where(np.array(is_passenger) == 0)[0]
-        minus_ones = np.where(np.array(is_passenger) == -1)[0]
-
-        if len(ones) == 1:
-            passenger_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][ones[0]]
-        elif len(minus_ones) == 3:
-            passenger_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
-    down_gain = 1.0
-    up_gain = 1.0
-    right_gain = 1.0
-    left_gain = 1.0
-    if not passenger_on and passenger_pos is not None:
-        if passenger_pos[0] > car_pos[0]:
-            down_gain *= 100
-        elif passenger_pos[0] < car_pos[0]:
-            up_gain *= 100
-        if passenger_pos[1] > car_pos[1]:
-            right_gain *= 100
-        elif passenger_pos[1] < car_pos[1]:
-            left_gain *= 100
-
-    if passenger_on and destination_pos is not None:
-        if destination_pos[0] > car_pos[0]:
-            down_gain *= 100
-        elif destination_pos[0] < car_pos[0]:
-            up_gain *= 100
-        if destination_pos[1] > car_pos[1]:
-            right_gain *= 100
-        elif destination_pos[1] < car_pos[1]:
-            left_gain *= 100
-
-    if destination_pos is None:
-        destination_nearby = obs[15]
-        a = nearby(station_pos[0], car_pos)
-        b = nearby(station_pos[1], car_pos)
-        c = nearby(station_pos[2], car_pos)
-        d = nearby(station_pos[3], car_pos)
-
-        if destination_nearby:
-            if a == 0:
-                is_destination[0] = -1
-            if b == 0:
-                is_destination[1] = -1
-            if c == 0:
-                is_destination[2] = -1
-            if d == 0:
-                is_destination[3] = -1
-            if a == 1 and is_destination[0] != -1:
-                is_destination[0] = 1
-            if b == 1 and is_destination[1] != -1:
-                is_destination[1] = 1
-            if c == 1 and is_destination[2] != -1:
-                is_destination[2] = 1
-            if d == 1 and is_destination[3] != -1:
-                is_destination[3] = 1
-
-        ones = np.where(np.array(is_destination) == 1)[0]
-        zeros = np.where(np.array(is_destination) == 0)[0]
-        minus_ones = np.where(np.array(is_destination) == -1)[0]
-        if len(ones) == 1:
-            destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][ones[0]]
-        elif len(minus_ones) == 3:
-            destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
-
-    if obs[10]:
-        wall[car_pos[0] - 1][car_pos[1]] = 1
-    if obs[11]:
-        wall[car_pos[0] + 1][car_pos[1]] = 1
-    if obs[12]:
-        wall[car_pos[0]][car_pos[1] + 1] = 1
-    if obs[13]:
-        wall[car_pos[0]][car_pos[1] - 1] = 1
-
-    # action = random.choice([0, 1, 2, 3, 4, 5])
-    # Pickup if passenger is not on.
-    if not passenger_on and car_pos == passenger_pos:
-        action = 4
-    # Dropoff
-    elif passenger_on and car_pos == destination_pos:
-        action = 5
-    else:
-        # random sample based on visit count and wall state
-        if wall[car_pos[0] + 1][car_pos[1]] == 1 or car_pos[0] + 1 > x_max:
-            logits0 = -10000
+class Agent():
+    def __init__(self, alpha=0.1, gamma=0.99, epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.999, path = None):
+        if path == None:
+            self.q_table = {}
         else:
-            logits0 = -visit_count[car_pos[0] + 1][car_pos[1]]
-        if wall[car_pos[0] - 1][car_pos[1]] == 1 or car_pos[0] - 1 < x_min:
-            logits1 = -10000
-        else:
-            logits1 = -visit_count[car_pos[0] - 1][car_pos[1]]
-        if wall[car_pos[0]][car_pos[1] + 1] == 1 or car_pos[1] + 1 > y_max:
-            logits2 = -10000
-        else:
-            logits2 = -visit_count[car_pos[0]][car_pos[1] + 1]
-        if wall[car_pos[0]][car_pos[1] - 1] == 1 or car_pos[1] - 1 < y_min:
-            logits3 = -10000
-        else:
-            logits3 = -visit_count[car_pos[0]][car_pos[1] - 1]
+            with open(path, 'rb') as f:
+                self.q_table = pickle.load(f)
+        self.alpha = alpha 
+        self.gamma = gamma
+        self.epsilon = epsilon_start
+        self.epsilon_end = epsilon_end
+        self.decay_rate = decay_rate
+        self._reset()
 
-        # sample action based on softmax prob
-        logits = np.array([logits0, logits1, logits2, logits3])
-        # print(logits)
-        prob = np.exp(logits - np.max(logits))
-        prob[0] *= down_gain
-        prob[1] *= up_gain
-        prob[2] *= right_gain
-        prob[3] *= left_gain
-        prob = prob / np.sum(prob)
-        print(prob)
-        action = np.random.choice([0, 1, 2, 3], p=prob)
+    def _reset(self):
+        MAX_SIZE = 10
+        self.visit_count = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
+        self.wall = np.zeros((MAX_SIZE + 2, MAX_SIZE + 2))
+        self.passenger_pos = None
+        self.first_near_passenger_pos = None
+
+        self.passenger_on = False
+
+        self.destination_pos = None
+        self.first_near_destination_pos = None
+
+        self.is_passenger = [0, 0, 0, 0]
+        self.is_destination = [0, 0, 0, 0]
+
+        self.x_min, self.x_max, self.y_min, self.y_max = 0, 0, 0, 0
+
+        self.prev_obs = None
+        self.first = True
+
+    def nearby(self, pos1, pos2):
+        if abs(pos1[0] - pos2[0]) == 0 and abs(pos1[1] - pos2[1]) == 0:
+            return 1
+        if abs(pos1[0] - pos2[0]) == 1 and abs(pos1[1] - pos2[1]) == 0: 
+            return 1
+        if abs(pos1[0] - pos2[0]) == 0 and abs(pos1[1] - pos2[1]) == 1:
+            return 1
+        return 0
+
+    def get_action(self, obs, debug = False, deterministic = False):
+        # Make sure env is not changed
+        
+        # TODO: Train your own agent
+        # HINT: If you're using a Q-table, consider designing a custom key based on `obs` to store useful information.
+        # NOTE: Keep in mind that your Q-table may not cover all possible states in the testing environment.
+        #       To prevent crashes, implement a fallback strategy for missing keys. 
+        #       Otherwise, even if your agent performs well in training, it may fail during testing.
+        # print(f"observation: {obs}")
+        self.visit_count[obs[0] + 1][obs[1] + 1] += 1
+        self.car_pos = (obs[0] + 1, obs[1] + 1)
+        # station0_pos = (obs[2] + 1, obs[3] + 1)
+        # station1_pos = (obs[4] + 1, obs[5] + 1)
+        # station2_pos = (obs[6] + 1, obs[7] + 1)
+        # station3_pos = (obs[8] + 1, obs[9] + 1)
+
+        state, goal_pos = self.extract_state(obs)
+
+        if state not in self.q_table:
+            self.q_table[state] = np.zeros(6)
+        
+        if np.random.rand() < self.epsilon and not deterministic:
+            action = np.random.choice([0, 1, 2, 3, 4, 5])
+        else:
+            prob = self.q_table[state]
+            if state[3]:
+                prob[0] = -100000
+            if state[2]:
+                prob[1] = -100000
+            if state[4]:
+                prob[2] = -100000
+            if state[5]:
+                prob[3] = -100000
+
+            # softmax to get the probability
+            max_prob = np.max(prob)
+            prob -= max_prob
+            prob = np.exp(prob)
+            prob /= np.sum(prob)
+            
+            down_count = self.visit_count[self.car_pos[0] + 1][self.car_pos[1]]
+            up_count = self.visit_count[self.car_pos[0] - 1][self.car_pos[1]]
+            right_count = self.visit_count[self.car_pos[0]][self.car_pos[1] + 1]
+            left_count = self.visit_count[self.car_pos[0]][self.car_pos[1] - 1]
+            prob[0] /= (down_count + 5 + 1e-5)
+            prob[1] /= (up_count + 5 + 1e-5)
+            prob[2] /= (right_count + 5 + 1e-5)
+            prob[3] /= (left_count + 5 + 1e-5)
+            prob /= np.sum(prob)
+            # randomly choose the action with the probability
+            if deterministic:
+                action = np.argmax(prob)
+            else:
+                action = np.random.choice([0, 1, 2, 3, 4, 5], p=prob)
+        if debug:
+            print(action)
+            print(f"visit_count: {self.visit_count}")
+            print(f"wall: {self.wall}")
+            print(f"passenger_pos: {self.passenger_pos}")
+            print(f"destination_pos: {self.destination_pos}")
+            print(f"passenger_on: {self.passenger_on}")
+            print(f"is_passenger: {self.is_passenger}")
+            print(f"is_destination: {self.is_destination}")
+            print(f"goal_pos: {goal_pos}")
+            print(f"self.car_pos: {self.car_pos}")
+            print(f"state: {state}")
+            print(f"q_table: {self.q_table[state]}")
+            print(f"prob: {prob}")
+
+
+        # if pickup
+        if action == 4 and self.car_pos == self.passenger_pos:
+            self.passenger_on = True
+
+        return action
+        # You can submit this random agent to evaluate the performance of a purely random strategy.
+    def extract_state(self, obs):
+        car_pos = (obs[0] + 1, obs[1] + 1)
+        station_pos = [(obs[2] + 1, obs[3] + 1), (obs[4] + 1, obs[5] + 1), (obs[6] + 1, obs[7] + 1), (obs[8] + 1, obs[9] + 1)]
+        x_min = np.min([station_pos[0][0], station_pos[1][0], station_pos[2][0], station_pos[3][0], car_pos[0]])    
+        x_max = np.max([station_pos[0][0], station_pos[1][0], station_pos[2][0], station_pos[3][0], car_pos[0]])
+        y_min = np.min([station_pos[0][1], station_pos[1][1], station_pos[2][1], station_pos[3][1], car_pos[1]])
+        y_max = np.max([station_pos[0][1], station_pos[1][1], station_pos[2][1], station_pos[3][1], car_pos[1]])
+        
+        
+        # print(x_min, x_max, y_min, y_max)
+
+        if self.passenger_pos is None:
+            passenger_nearby = obs[14]
+            a = self.nearby(station_pos[0], car_pos)
+            b = self.nearby(station_pos[1], car_pos)
+            c = self.nearby(station_pos[2], car_pos)
+            d = self.nearby(station_pos[3], car_pos)
+
+            if passenger_nearby:
+                if a == 0:
+                    self.is_passenger[0] = -1
+                if b == 0:
+                    self.is_passenger[1] = -1
+                if c == 0:
+                    self.is_passenger[2] = -1
+                if d == 0:
+                    self.is_passenger[3] = -1
+                if a == 1 and self.is_passenger[0] != -1:
+                    self.is_passenger[0] = 1
+                if b == 1 and self.is_passenger[1] != -1:
+                    self.is_passenger[1] = 1
+                if c == 1 and self.is_passenger[2] != -1:
+                    self.is_passenger[2] = 1
+                if d == 1 and self.is_passenger[3] != -1:
+                    self.is_passenger[3] = 1
+            else:
+                if a:
+                    self.is_passenger[0] = -1
+                if b:
+                    self.is_passenger[1] = -1
+                if c:
+                    self.is_passenger[2] = -1
+                if d:
+                    self.is_passenger[3] = -1
+
+            ones = np.where(np.array(self.is_passenger) == 1)[0]
+            zeros = np.where(np.array(self.is_passenger) == 0)[0]
+            minus_ones = np.where(np.array(self.is_passenger) == -1)[0]
+
+            if len(ones) == 1:
+                self.passenger_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][ones[0]]
+            elif len(minus_ones) == 3:
+                self.passenger_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
+
+        if self.destination_pos is None:
+            destination_nearby = obs[15]
+            a = self.nearby(station_pos[0], car_pos)
+            b = self.nearby(station_pos[1], car_pos)
+            c = self.nearby(station_pos[2], car_pos)
+            d = self.nearby(station_pos[3], car_pos)
+
+            if destination_nearby:
+                if a == 0:
+                    self.is_destination[0] = -1
+                if b == 0:
+                    self.is_destination[1] = -1
+                if c == 0:
+                    self.is_destination[2] = -1
+                if d == 0:
+                    self.is_destination[3] = -1
+                if a == 1 and self.is_destination[0] != -1:
+                    self.is_destination[0] = 1
+                if b == 1 and self.is_destination[1] != -1:
+                    self.is_destination[1] = 1
+                if c == 1 and self.is_destination[2] != -1:
+                    self.is_destination[2] = 1
+                if d == 1 and self.is_destination[3] != -1:
+                    self.is_destination[3] = 1
+            else:
+                if a:
+                    self.is_destination[0] = -1
+                if b:
+                    self.is_destination[1] = -1
+                if c:
+                    self.is_destination[2] = -1
+                if d:
+                    self.is_destination[3] = -1
+
+            ones = np.where(np.array(self.is_destination) == 1)[0]
+            zeros = np.where(np.array(self.is_destination) == 0)[0]
+            minus_ones = np.where(np.array(self.is_destination) == -1)[0]
+            if len(ones) == 1:
+                self.destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][ones[0]]
+            elif len(minus_ones) == 3:
+                self.destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
+
+        if obs[10] or car_pos[0] == x_min:
+            self.wall[car_pos[0] - 1][car_pos[1]] = 1
+        if obs[11] or car_pos[0] == x_max:
+            self.wall[car_pos[0] + 1][car_pos[1]] = 1
+        if obs[12] or car_pos[1] == y_max:
+            self.wall[car_pos[0]][car_pos[1] + 1] = 1
+        if obs[13] or car_pos[1] == y_min:
+            self.wall[car_pos[0]][car_pos[1] - 1] = 1
+
+        goal_pos = None
+        if self.passenger_pos is None:
+            # Find the nearest station
+            min_dist = 100000
+            for i in range(4):
+                if self.is_passenger[i] == 1:
+                    dist = abs(station_pos[i][0] - car_pos[0]) + abs(station_pos[i][1] - car_pos[1])
+                    if dist < min_dist:
+                        min_dist = dist
+                        goal_pos = station_pos[i]
+            if goal_pos is None:
+                for i in range(4):
+                    if self.is_passenger[i] == 0:
+                        dist = abs(station_pos[i][0] - car_pos[0]) + abs(station_pos[i][1] - car_pos[1])
+                        if dist < min_dist:
+                            min_dist = dist
+                            goal_pos = station_pos[i]
+        elif not self.passenger_on and self.passenger_pos is not None:
+            goal_pos = self.passenger_pos
+        elif self.passenger_on and self.destination_pos is None:
+            min_dist = 100000
+            for i in range(4):
+                if self.is_destination[i] == 1:
+                    dist = abs(station_pos[i][0] - car_pos[0]) + abs(station_pos[i][1] - car_pos[1])
+                    if dist < min_dist:
+                        min_dist = dist
+                        goal_pos = station_pos[i]
+            if goal_pos is None:
+                for i in range(4):
+                    if self.is_destination[i] == 0:
+                        dist = abs(station_pos[i][0] - car_pos[0]) + abs(station_pos[i][1] - car_pos[1])
+                        if dist < min_dist:
+                            min_dist = dist
+                            goal_pos = station_pos[i]
+        else:
+            goal_pos = self.destination_pos
+
+        # Find the dir of goal
+        if goal_pos[0] > car_pos[0] and goal_pos[1] > car_pos[1]:
+            dir = 1
+        elif goal_pos[0] == car_pos[0] and goal_pos[1] > car_pos[1]:
+            dir = 2
+        elif goal_pos[0] < car_pos[0] and goal_pos[1] > car_pos[1]:
+            dir = 3
+        elif goal_pos[0] < car_pos[0] and goal_pos[1] == car_pos[1]:
+            dir = 4
+        elif goal_pos[0] < car_pos[0] and goal_pos[1] < car_pos[1]:
+            dir = 5
+        elif goal_pos[0] == car_pos[0] and goal_pos[1] < car_pos[1]:
+            dir = 6
+        elif goal_pos[0] > car_pos[0] and goal_pos[1] < car_pos[1]:
+            dir = 7
+        elif goal_pos[0] > car_pos[0] and goal_pos[1] == car_pos[1]:
+            dir = 8
+        else:
+            dir = 0
+
+        state = (dir, self.passenger_on, self.wall[car_pos[0] - 1][car_pos[1]], self.wall[car_pos[0] + 1][car_pos[1]], self.wall[car_pos[0]][car_pos[1] + 1], self.wall[car_pos[0]][car_pos[1] - 1])
+        return state, goal_pos
     
-    # print(action)
+    def update_epsilon(self):
+        self.epsilon = max(self.epsilon * self.decay_rate, self.epsilon_end)
 
-    # if pickup
-    if action == 4 and car_pos == passenger_pos:
-        passenger_on = True
+    def update_q_table(self, state, action, reward, next_state):
+        if next_state not in self.q_table:
+            self.q_table[next_state] = np.zeros(6)
+        self.q_table[state][action] += self.alpha * (reward + self.gamma * np.max(self.q_table[next_state]) - self.q_table[state][action])
 
-    print(station_pos[0], station_pos[1], station_pos[2], station_pos[3], car_pos)
-    print(f"visit_count: {visit_count}")
-    print(f"wall: {wall}")
-    print(f"passenger_pos: {passenger_pos}")
-    print(f"destination_pos: {destination_pos}")
-    print(f"passenger_on: {passenger_on}")
-    print(f"is_passenger: {is_passenger}")
-    print(f"is_destination: {is_destination}")
-    first = False
+    def save(self, path):
+        with open(path, 'wb') as f:
+            pickle.dump(self.q_table, f)
 
+# taxi_agent.pkl
+agent = Agent(path = 'taxi_agent.pkl')
+
+def get_action(obs, debug=False):
+    action = agent.get_action(obs, debug = True, deterministic=True)
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
 
