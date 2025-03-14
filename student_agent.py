@@ -83,10 +83,10 @@ class Agent():
             prob /= np.sum(prob)
 
             act = None
-            if np.random.rand() < prob[0] + prob[1] + prob[2] + prob[3]:
-                act = "move"
-            else:
+            if (not self.passenger_on and self.car_pos == self.passenger_pos) or (self.passenger_on and self.car_pos == self.destination_pos):
                 act = "pick_drop"
+            else:
+                act = "move"
             
             down_count = self.visit_count[self.car_pos[0] + 1][self.car_pos[1]]
             up_count = self.visit_count[self.car_pos[0] - 1][self.car_pos[1]]
@@ -119,7 +119,7 @@ class Agent():
                     max_new_prob = np.max(new_prob)
                     new_prob -= max_new_prob
                     new_prob = np.exp(new_prob)
- 
+
                     new_prob[0] /= 2**down_count
                     new_prob[1] /= 2**up_count
                     new_prob[2] /= 2**right_count
@@ -135,32 +135,35 @@ class Agent():
                     #     action = 4
                     # else:
                     #     action = 5
-                    if np.random.rand() < (prob[4] / (prob[4] + prob[5])):
+                    # if np.random.rand() < (prob[4] / (prob[4] + prob[5])):
+                    #     action = 4
+                    # else:
+                    #     action = 5
+                    if not self.passenger_on:
                         action = 4
                     else:
                         action = 5
 
         if debug:
-            # print(action)
-            # print(f"visit_count: {self.visit_count}")
-            # print(f"wall: {self.wall}")
-            # print(f"passenger_pos: {self.passenger_pos}")
-            # print(f"destination_pos: {self.destination_pos}")
+            print(f"visit_count: {self.visit_count}")
+            print(f"wall: {self.wall}")
+            print(f"passenger_pos: {self.passenger_pos}")
+            print(f"destination_pos: {self.destination_pos}")
             print(f"passenger_on: {self.passenger_on}")
-            # print(f"is_passenger: {self.is_passenger}")
-            # print(f"is_destination: {self.is_destination}")
+            print(f"is_passenger: {self.is_passenger}")
+            print(f"is_destination: {self.is_destination}")
             print(f"goal_pos: {goal_pos}")
-            # print(f"self.car_pos: {self.car_pos}")
-            # print(f"state: {state}")
-            # print(f"action: {action}")
+            print(f"self.car_pos: {self.car_pos}")
+            print(f"state: {state}")
+            print(f"action: {action}")
             print(f"q_table: {self.q_table[state]}")
-            # print(f"prob: {prob}")
-            # print(f"down_count: {down_count}")
-            # print(f"up_count: {up_count}")
-            # print(f"right_count: {right_count}")
-            # print(f"left_count: {left_count}")
-            # print(f"station_pos: {[(obs[2] + 1, obs[3] + 1), (obs[4] + 1, obs[5] + 1), (obs[6] + 1, obs[7] + 1), (obs[8] + 1, obs[9] + 1)]}")
-            # print(f"observation: {obs}")
+            print(f"prob: {prob}")
+            print(f"down_count: {down_count}")
+            print(f"up_count: {up_count}")
+            print(f"right_count: {right_count}")
+            print(f"left_count: {left_count}")
+            print(f"station_pos: {[(obs[2] + 1, obs[3] + 1), (obs[4] + 1, obs[5] + 1), (obs[6] + 1, obs[7] + 1), (obs[8] + 1, obs[9] + 1)]}")
+            print(f"observation: {obs}")
 
         # if pickup
         if action == 4 and self.car_pos == self.passenger_pos:
@@ -349,7 +352,7 @@ class Agent():
 agent = Agent(path = 'taxi_agent.pkl')
 
 def get_action(obs, debug=False):
-    action = agent.get_action(obs, debug = False, deterministic=False, eval=True)
+    action = agent.get_action(obs, debug = True, deterministic=False, eval=True)
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
 
