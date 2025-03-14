@@ -4,4 +4,4 @@ argparse
 torch
 gym
 IPython
-numpy
+numpy==2.0.0
