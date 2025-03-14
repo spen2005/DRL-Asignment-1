@@ -304,7 +304,7 @@ class Agent():
 agent = Agent(path = 'taxi_agent.pkl')
 
 def get_action(obs, debug=False):
-    action = agent.get_action(obs, debug = True, deterministic=True)
+    action = agent.get_action(obs, debug = False, deterministic=True)
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
 
