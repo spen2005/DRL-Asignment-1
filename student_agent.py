@@ -84,7 +84,12 @@ class Agent():
 
             act = None
             # if (not self.passenger_on and self.car_pos == self.passenger_pos) or (self.passenger_on and self.car_pos == self.destination_pos):
-            if np.random.rand() < prob[4] + prob[5]:
+            print("prob:", prob)
+            print("dest pos:", self.destination_pos)
+            print("state:", state)
+            print("goal pos:", goal_pos)
+            print("car pos:", self.car_pos)
+            if prob[4] + prob[5] > 0.5:
                 act = "pick_drop"
             else:
                 act = "move"
@@ -140,7 +145,11 @@ class Agent():
                     #     action = 4
                     # else:
                     #     action = 5
-                    if not self.passenger_on:
+                    # if not self.passenger_on:
+                    #     action = 4
+                    # else:
+                    #     action = 5
+                    if prob[4] > prob[5]:
                         action = 4
                     else:
                         action = 5
@@ -359,7 +368,7 @@ class Agent():
             pickle.dump(self.q_table, f)
 
 # taxi_agent.pkl
-agent = Agent(path = 'taxi_agent2.pkl')
+agent = Agent(path = 'taxi_agent3.pkl')
 
 def get_action(obs, debug=False):
     action = agent.get_action(obs, debug = False, deterministic=False, eval=True)
