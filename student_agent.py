@@ -83,13 +83,13 @@ class Agent():
             prob /= np.sum(prob)
 
             act = None
-            # if (not self.passenger_on and self.car_pos == self.passenger_pos) or (self.passenger_on and self.car_pos == self.destination_pos):
-            print("prob:", prob)
-            print("dest pos:", self.destination_pos)
-            print("state:", state)
-            print("goal pos:", goal_pos)
-            print("car pos:", self.car_pos)
-            if prob[4] + prob[5] > 0.5:
+            if (not self.passenger_on and self.car_pos == self.passenger_pos) or (self.passenger_on and self.car_pos == self.destination_pos):
+            # print("prob:", prob)
+            # print("dest pos:", self.destination_pos)
+            # print("state:", state)
+            # print("goal pos:", goal_pos)
+            # print("car pos:", self.car_pos)
+            # if prob[4] + prob[5] > 0.5:
                 act = "pick_drop"
             else:
                 act = "move"
