@@ -267,13 +267,22 @@ class Agent():
             elif len(minus_ones) == 3:
                 self.destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
 
-        if obs[10] or car_pos[0] == x_min:
+        # if obs[10] or car_pos[0] == x_min:
+        #     self.wall[car_pos[0] - 1][car_pos[1]] = 1
+        # if obs[11] or car_pos[0] == x_max:
+        #     self.wall[car_pos[0] + 1][car_pos[1]] = 1
+        # if obs[12] or car_pos[1] == y_max:
+        #     self.wall[car_pos[0]][car_pos[1] + 1] = 1
+        # if obs[13] or car_pos[1] == y_min:
+        #     self.wall[car_pos[0]][car_pos[1] - 1] = 1
+
+        if obs[10]:
             self.wall[car_pos[0] - 1][car_pos[1]] = 1
-        if obs[11] or car_pos[0] == x_max:
+        if obs[11]:
             self.wall[car_pos[0] + 1][car_pos[1]] = 1
-        if obs[12] or car_pos[1] == y_max:
+        if obs[12]:
             self.wall[car_pos[0]][car_pos[1] + 1] = 1
-        if obs[13] or car_pos[1] == y_min:
+        if obs[13]:
             self.wall[car_pos[0]][car_pos[1] - 1] = 1
 
         goal_pos = None
@@ -352,7 +361,7 @@ class Agent():
 agent = Agent(path = 'taxi_agent2.pkl')
 
 def get_action(obs, debug=False):
-    action = agent.get_action(obs, debug = True, deterministic=False, eval=True)
+    action = agent.get_action(obs, debug = False, deterministic=False, eval=True)
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
 
