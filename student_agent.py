@@ -146,13 +146,13 @@ class Agent():
 
         if debug:
             # print(f"visit_count: {self.visit_count}")
-            # print(f"wall: {self.wall}")
-            print(f"passenger_pos: {self.passenger_pos}")
-            print(f"destination_pos: {self.destination_pos}")
-            print(f"passenger_on: {self.passenger_on}")
+            print(f"wall: {self.wall}")
+            # print(f"passenger_pos: {self.passenger_pos}")
+            # print(f"destination_pos: {self.destination_pos}")
+            # print(f"passenger_on: {self.passenger_on}")
             # print(f"is_passenger: {self.is_passenger}")
             # print(f"is_destination: {self.is_destination}")
-            print(f"goal_pos: {goal_pos}")
+            # print(f"goal_pos: {goal_pos}")
             # print(f"self.car_pos: {self.car_pos}")
             # print(f"state: {state}")
             # print(f"action: {action}")
@@ -352,7 +352,7 @@ class Agent():
 agent = Agent(path = 'taxi_agent2.pkl')
 
 def get_action(obs, debug=False):
-    action = agent.get_action(obs, debug = False, deterministic=False, eval=True)
+    action = agent.get_action(obs, debug = True, deterministic=False, eval=True)
     return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
 
