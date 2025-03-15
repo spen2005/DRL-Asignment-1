@@ -349,7 +349,7 @@ class Agent():
             pickle.dump(self.q_table, f)
 
 # taxi_agent.pkl
-agent = Agent(path = 'taxi_agent.pkl')
+agent = Agent(path = 'taxi_agent2.pkl')
 
 def get_action(obs, debug=False):
     action = agent.get_action(obs, debug = False, deterministic=False, eval=True)
