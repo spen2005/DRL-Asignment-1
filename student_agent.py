@@ -58,10 +58,6 @@ class Agent():
         # print(f"observation: {obs}")
         self.visit_count[obs[0] + 1][obs[1] + 1] += 1
         self.car_pos = (obs[0] + 1, obs[1] + 1)
-        # station0_pos = (obs[2] + 1, obs[3] + 1)
-        # station1_pos = (obs[4] + 1, obs[5] + 1)
-        # station2_pos = (obs[6] + 1, obs[7] + 1)
-        # station3_pos = (obs[8] + 1, obs[9] + 1)
 
         state, goal_pos = self.extract_state(obs)
 
@@ -83,12 +79,6 @@ class Agent():
             prob /= np.sum(prob)
 
             act = None
-            # if (not self.passenger_on and self.car_pos == self.passenger_pos) or (self.passenger_on and self.car_pos == self.destination_pos):
-            # print("prob:", prob)
-            # print("dest pos:", self.destination_pos)
-            # print("state:", state)
-            # print("goal pos:", goal_pos)
-            # print("car pos:", self.car_pos)
             if prob[4] + prob[5] > 0.5:
                 act = "pick_drop"
             else:
@@ -105,10 +95,6 @@ class Agent():
             else:
                 if act == "move":
                     new_prob = self.q_table[state][:4].copy()
-                    # new_prob[0] -= 100 * down_count
-                    # new_prob[1] -= 100 * up_count
-                    # new_prob[2] -= 100 * right_count
-                    # new_prob[3] -= 100 * left_count
 
                     if state[2]:
                         new_prob[0] = -1000000
@@ -137,18 +123,6 @@ class Agent():
                     if debug:
                         print(f"new prob: {new_prob}")
                 else:
-                    # if prob[4] > prob[5]:
-                    #     action = 4
-                    # else:
-                    #     action = 5
-                    # if np.random.rand() < (prob[4] / (prob[4] + prob[5])):
-                    #     action = 4
-                    # else:
-                    #     action = 5
-                    # if not self.passenger_on:
-                    #     action = 4
-                    # else:
-                    #     action = 5
                     if prob[4] > prob[5]:
                         action = 4
                     else:
@@ -277,15 +251,6 @@ class Agent():
             elif len(minus_ones) == 3:
                 self.destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
 
-        # if obs[10] or car_pos[0] == x_min:
-        #     self.wall[car_pos[0] - 1][car_pos[1]] = 1
-        # if obs[11] or car_pos[0] == x_max:
-        #     self.wall[car_pos[0] + 1][car_pos[1]] = 1
-        # if obs[12] or car_pos[1] == y_max:
-        #     self.wall[car_pos[0]][car_pos[1] + 1] = 1
-        # if obs[13] or car_pos[1] == y_min:
-        #     self.wall[car_pos[0]][car_pos[1] - 1] = 1
-
         if obs[10]:
             self.wall[car_pos[0] - 1][car_pos[1]] = 1
         if obs[11]:
@@ -368,7 +333,7 @@ class Agent():
             pickle.dump(self.q_table, f)
 
 # taxi_agent.pkl
-agent = Agent(path = 'taxi_agent3.pkl')
+agent = Agent(path = 'taxi_agent.pkl')
 
 def get_action(obs, debug=False):
     action = agent.get_action(obs, debug = False, deterministic=False, eval=True)

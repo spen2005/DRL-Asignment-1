@@ -36,7 +36,7 @@ class SimpleTaxiEnv():
 
         self.obstacles = set()
         # sample number of obstacles 0~15
-        num_obstacles = random.randint(0, 15)
+        num_obstacles = random.randint(0, 50)
         for i in range(num_obstacles):
             x = random.randint(0, self.grid_size - 1)
             y = random.randint(0, self.grid_size - 1)
@@ -222,7 +222,7 @@ import random
 import gym
 
 class Agent():
-    def __init__(self, alpha=0.1, gamma=0.99, epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.999, path = None):
+    def __init__(self, alpha=0.1, gamma=0.99, epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.99995, path = None):
         if path == None:
             self.q_table = {}
         else:
@@ -233,6 +233,7 @@ class Agent():
         self.epsilon = epsilon_start
         self.epsilon_end = epsilon_end
         self.decay_rate = decay_rate
+        self._reset()
 
     def _reset(self):
         MAX_SIZE = 10
@@ -263,7 +264,7 @@ class Agent():
             return 1
         return 0
 
-    def get_action(self, obs, debug = False):
+    def get_action(self, obs, debug = False, deterministic = False, eval = False):
         # Make sure env is not changed
         
         # TODO: Train your own agent
@@ -271,64 +272,106 @@ class Agent():
         # NOTE: Keep in mind that your Q-table may not cover all possible states in the testing environment.
         #       To prevent crashes, implement a fallback strategy for missing keys. 
         #       Otherwise, even if your agent performs well in training, it may fail during testing.
-        # print(f"observation: {obs}")
         self.visit_count[obs[0] + 1][obs[1] + 1] += 1
         self.car_pos = (obs[0] + 1, obs[1] + 1)
-        # station0_pos = (obs[2] + 1, obs[3] + 1)
-        # station1_pos = (obs[4] + 1, obs[5] + 1)
-        # station2_pos = (obs[6] + 1, obs[7] + 1)
-        # station3_pos = (obs[8] + 1, obs[9] + 1)
 
         state, goal_pos = self.extract_state(obs)
 
         if state not in self.q_table:
             self.q_table[state] = np.zeros(6)
         
-        if np.random.rand() < self.epsilon:
+        if np.random.rand() < self.epsilon and not deterministic and not eval:
             action = np.random.choice([0, 1, 2, 3, 4, 5])
         else:
-            prob = self.q_table[state]
-            if state[3]:
-                prob[0] = -100000
-            if state[2]:
-                prob[1] = -100000
-            if state[4]:
-                prob[2] = -100000
-            if state[5]:
-                prob[3] = -100000
+            prob = self.q_table[state].copy()
+
+            if debug:
+                print(f"state: {state[2:6]}")
 
             # softmax to get the probability
             max_prob = np.max(prob)
             prob -= max_prob
             prob = np.exp(prob)
             prob /= np.sum(prob)
+
+            act = None
+            if prob[4] + prob[5] > 0.5:
+                act = "pick_drop"
+            else:
+                act = "move"
             
             down_count = self.visit_count[self.car_pos[0] + 1][self.car_pos[1]]
             up_count = self.visit_count[self.car_pos[0] - 1][self.car_pos[1]]
             right_count = self.visit_count[self.car_pos[0]][self.car_pos[1] + 1]
             left_count = self.visit_count[self.car_pos[0]][self.car_pos[1] - 1]
-            prob[0] /= (down_count + 5 + 1e-5)
-            prob[1] /= (up_count + 5 + 1e-5)
-            prob[2] /= (right_count + 5 + 1e-5)
-            prob[3] /= (left_count + 5 + 1e-5)
-            prob /= np.sum(prob)
-            # randomly choose the action with the probability
-            action = np.random.choice([0, 1, 2, 3, 4, 5], p=prob)
-        if debug:
-            print(action)
-            print(f"visit_count: {self.visit_count}")
-            print(f"wall: {self.wall}")
-            print(f"passenger_pos: {self.passenger_pos}")
-            print(f"destination_pos: {self.destination_pos}")
-            print(f"passenger_on: {self.passenger_on}")
-            print(f"is_passenger: {self.is_passenger}")
-            print(f"is_destination: {self.is_destination}")
-            print(f"goal_pos: {goal_pos}")
-            print(f"self.car_pos: {self.car_pos}")
-            print(f"state: {state}")
-            print(f"q_table: {self.q_table[state]}")
-            print(f"prob: {prob}")
 
+            # randomly choose the action with the probability
+            if deterministic:
+                action = np.argmax(prob)
+            else:
+                if act == "move":
+                    new_prob = self.q_table[state][:4].copy()
+
+                    if state[2]:
+                        new_prob[0] = -1000000
+                    if state[3]:
+                        new_prob[1] = -1000000
+                    if state[4]:
+                        new_prob[2] = -1000000
+                    if state[5]:
+                        new_prob[3] = -1000000
+
+                    if debug:
+                        print(f"new prob: {new_prob}")
+
+                    max_new_prob = np.max(new_prob)
+                    new_prob -= max_new_prob
+                    new_prob = np.exp(new_prob)
+
+                    new_prob[0] /= 5**down_count
+                    new_prob[1] /= 5**up_count
+                    new_prob[2] /= 5**right_count
+                    new_prob[3] /= 5**left_count
+
+                    new_prob /= np.sum(new_prob)
+                    action = np.random.choice([0, 1, 2, 3], p=new_prob)
+
+                    if debug:
+                        print(f"new prob: {new_prob}")
+                else:
+                    # if prob[4] > prob[5]:
+                    #     action = 4
+                    # else:
+                    #     action = 5
+                    # if np.random.rand() < (prob[4] / (prob[4] + prob[5])):
+                    #     action = 4
+                    # else:
+                    #     action = 5
+                    if prob[4] > prob[5]:
+                        action = 4
+                    else:
+                        action = 5
+
+        if debug:
+            # print(f"visit_count: {self.visit_count}")
+            print(f"wall: {self.wall}")
+            # print(f"passenger_pos: {self.passenger_pos}")
+            # print(f"destination_pos: {self.destination_pos}")
+            # print(f"passenger_on: {self.passenger_on}")
+            # print(f"is_passenger: {self.is_passenger}")
+            # print(f"is_destination: {self.is_destination}")
+            # print(f"goal_pos: {goal_pos}")
+            # print(f"self.car_pos: {self.car_pos}")
+            # print(f"state: {state}")
+            # print(f"action: {action}")
+            # print(f"q_table: {self.q_table[state]}")
+            # print(f"prob: {prob}")
+            # print(f"down_count: {down_count}")
+            # print(f"up_count: {up_count}")
+            # print(f"right_count: {right_count}")
+            # print(f"left_count: {left_count}")
+            # print(f"station_pos: {[(obs[2] + 1, obs[3] + 1), (obs[4] + 1, obs[5] + 1), (obs[6] + 1, obs[7] + 1), (obs[8] + 1, obs[9] + 1)]}")
+            # print(f"observation: {obs}")
 
         # if pickup
         if action == 4 and self.car_pos == self.passenger_pos:
@@ -432,13 +475,22 @@ class Agent():
             elif len(minus_ones) == 3:
                 self.destination_pos = [station_pos[0], station_pos[1], station_pos[2], station_pos[3]][zeros[0]]
 
-        if obs[10] or car_pos[0] == x_min:
+        # if obs[10] or car_pos[0] == x_min:
+        #     self.wall[car_pos[0] - 1][car_pos[1]] = 1
+        # if obs[11] or car_pos[0] == x_max:
+        #     self.wall[car_pos[0] + 1][car_pos[1]] = 1
+        # if obs[12] or car_pos[1] == y_max:
+        #     self.wall[car_pos[0]][car_pos[1] + 1] = 1
+        # if obs[13] or car_pos[1] == y_min:
+        #     self.wall[car_pos[0]][car_pos[1] - 1] = 1
+
+        if obs[10]:
             self.wall[car_pos[0] - 1][car_pos[1]] = 1
-        if obs[11] or car_pos[0] == x_max:
+        if obs[11]:
             self.wall[car_pos[0] + 1][car_pos[1]] = 1
-        if obs[12] or car_pos[1] == y_max:
+        if obs[12]:
             self.wall[car_pos[0]][car_pos[1] + 1] = 1
-        if obs[13] or car_pos[1] == y_min:
+        if obs[13]:
             self.wall[car_pos[0]][car_pos[1] - 1] = 1
 
         goal_pos = None
@@ -498,7 +550,7 @@ class Agent():
         else:
             dir = 0
 
-        state = (dir, self.passenger_on, self.wall[car_pos[0] - 1][car_pos[1]], self.wall[car_pos[0] + 1][car_pos[1]], self.wall[car_pos[0]][car_pos[1] + 1], self.wall[car_pos[0]][car_pos[1] - 1])
+        state = (dir, self.passenger_on, self.wall[car_pos[0] + 1][car_pos[1]], self.wall[car_pos[0] - 1][car_pos[1]], self.wall[car_pos[0]][car_pos[1] + 1], self.wall[car_pos[0]][car_pos[1] - 1])
         return state, goal_pos
     
     def update_epsilon(self):
@@ -518,7 +570,7 @@ class Agent():
 
 def train_agent(episodes=1000, max_steps=100, render_every=100):
     env = SimpleTaxiEnv(grid_size=10, fuel_limit=50)
-    agent = Agent(alpha=0.1, gamma=0.9995, epsilon_start=1.0, epsilon_end=0.01, decay_rate=0.995)
+    agent = Agent(alpha=0.1, gamma=0.99, epsilon_start=1.0, epsilon_end=0.01, decay_rate=0.9995)
     
     all_rewards = []
     avg_rewards = []
@@ -552,10 +604,10 @@ def train_agent(episodes=1000, max_steps=100, render_every=100):
             next_state = agent.extract_state(next_obs)
             # If passby the passenger without picking up
             if not agent.passenger_on and agent.car_pos == agent.passenger_pos:
-                reward -= 10
+                reward -= 20
             # If passby the destination without dropping off
-            if agent.passenger_on and agent.car_pos == agent.destination_pos:
-                reward -= 10
+            if agent.passenger_on and agent.car_pos == agent.destination_pos and action != 5:
+                reward -= 50
             
             # Update Q-table
             agent.update_q_table(state, action, reward, next_state)
@@ -604,4 +656,4 @@ def train_agent(episodes=1000, max_steps=100, render_every=100):
 
 # Run the training
 if __name__ == "__main__":
-    agent, rewards, avg_rewards, success_rates = train_agent(episodes=10000, max_steps=50, render_every=10000)
+    agent, rewards, avg_rewards, success_rates = train_agent(episodes=20000, max_steps=50, render_every=3000)
